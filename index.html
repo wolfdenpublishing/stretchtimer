@@ -409,6 +409,37 @@
   .landing-description strong {
     color: var(--text);
   }
+
+  .disclaimer {
+    text-align: center;
+    padding-top: 32px;
+    width: 100%;
+  }
+  .disclaimer h2 {
+    font-family: 'Space Mono', monospace;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--warning);
+    margin-bottom: 24px;
+  }
+  .disclaimer-text {
+    text-align: left;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+    margin-bottom: 28px;
+    padding: 0 8px;
+  }
+  .disclaimer-text p {
+    margin-bottom: 12px;
+  }
+  .disclaimer-note {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    opacity: 0.6;
+    margin-top: 20px;
+  }
 </style>
 </head>
 <body>
@@ -583,9 +614,6 @@ function renderLanding() {
       <div class="btn-row">
         <button class="btn btn-start" onclick="showIntro()">View Routine</button>
       </div>
-      <div style="margin-top:28px;font-size:0.55rem;color:var(--text-dim);line-height:1.5;text-align:left;opacity:0.7;">
-        <p>Rise &amp; Stretch was designed by a Registered Nurse with several years of yoga training using well-established yoga poses. This app is for informational and educational purposes only and does not constitute medical advice. As with any physical activity, you assume full responsibility for ensuring all exercises are performed within your own physical limits. The author and publisher of Rise &amp; Stretch accept no liability for any injury, loss, or damage arising from use of this app. If you have any health concerns or medical conditions, consult a licensed physician before beginning this or any exercise program.</p>
-      </div>
     </div>
   `;
   scaleApp();
@@ -604,12 +632,48 @@ function renderLanding() {
   }, 3000);
 }
 
+function getRunCount() {
+  return parseInt(localStorage.getItem('stretchTimerRunCount') || '0', 10);
+}
+
+function incrementRunCount() {
+  localStorage.setItem('stretchTimerRunCount', (getRunCount() + 1).toString());
+}
+
+function renderDisclaimer() {
+  app.innerHTML = `
+    <div class="disclaimer">
+      <h2>Disclaimer</h2>
+      <div class="disclaimer-text">
+        <p>While Rise &amp; Stretch was designed by a Registered Nurse with several years of yoga training using well-established yoga poses, this app is for <strong style="color:var(--text);">informational and educational purposes only</strong> and does not constitute medical advice.</p>
+        <p>As with any physical activity, you assume full responsibility for ensuring all exercises are performed within your own physical limits. The author and publisher of Rise &amp; Stretch accept no liability for any injury, loss, or damage arising from use of this app.</p>
+        <p>If you have any health concerns or medical conditions, <strong style="color:var(--text);">consult a licensed physician</strong> before beginning this or any exercise program.</p>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-start" onclick="acceptDisclaimer()">I Understand</button>
+      </div>
+      <div class="disclaimer-note">This notice is displayed every 30 sessions.</div>
+    </div>
+  `;
+  scaleApp();
+}
+
+function acceptDisclaimer() {
+  incrementRunCount();
+  renderIntro();
+}
+
 function showIntro() {
   if (landingImageInterval) {
     clearInterval(landingImageInterval);
     landingImageInterval = null;
   }
-  renderIntro();
+  if (getRunCount() % 30 === 0) {
+    renderDisclaimer();
+  } else {
+    incrementRunCount();
+    renderIntro();
+  }
 }
 
 function renderIntro() {
@@ -728,7 +792,7 @@ function renderComplete() {
       <h2>All Done!</h2>
       <p>Great work finishing your flexibility routine.</p>
       <button class="btn btn-start" onclick="resetApp()">Do It Again</button>
-      <div style="margin-top:32px;font-size:0.55rem;line-height:2;white-space:nowrap;">
+      <div style="margin-top:32px;font-size:0.65rem;line-height:2;white-space:nowrap;">
         <p style="font-size:inherit;margin:0;">App Design by <a href="https://github.com/wolfdenpublishing/stretchtimer" target="_blank" rel="noopener" style="color:var(--accent);">Wolfden Publishing</a> &middot; MIT License</p>
         <p style="font-size:inherit;margin:0;">Created with the help of <a href="https://claude.com/claude-code" target="_blank" rel="noopener" style="color:var(--accent);">Anthropic Claude Code</a></p>
         <p style="font-size:inherit;margin:0;">Pose illustrations by <a href="https://www.freepik.com/author/brgfx" target="_blank" rel="noopener" style="color:var(--accent);">brgfx</a> on Freepik</p>
