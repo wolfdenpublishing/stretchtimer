@@ -26,21 +26,21 @@
     font-family: 'DM Sans', sans-serif;
     background: var(--bg);
     color: var(--text);
-    min-height: 100dvh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    overflow-x: hidden;
+    justify-content: flex-start;
+    overflow: hidden;
   }
 
   .app {
-    width: 100%;
-    max-width: 420px;
+    width: 420px;
     padding: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-height: 100dvh;
+    transform-origin: top center;
   }
 
   .header {
@@ -492,6 +492,7 @@ function renderIntro() {
       </div>
     </div>
   `;
+  scaleApp();
 }
 
 function renderPose() {
@@ -565,6 +566,7 @@ function renderPose() {
       <button class="nav-btn" onclick="nextPose()">Skip <span class="nav-icon">&#9654;</span></button>
     </div>
   `;
+  scaleApp();
 }
 
 function renderComplete() {
@@ -579,6 +581,7 @@ function renderComplete() {
       <button class="btn btn-start" onclick="resetApp()">Do It Again</button>
     </div>
   `;
+  scaleApp();
 }
 
 function startRoutine() {
@@ -692,6 +695,18 @@ function resetApp() {
   clearInterval(timerInterval);
   renderIntro();
 }
+
+function scaleApp() {
+  app.style.transform = 'none';
+  const appW = app.offsetWidth;
+  const appH = app.scrollHeight;
+  const winW = window.innerWidth;
+  const winH = window.innerHeight;
+  const scale = Math.min(winW / appW, winH / appH);
+  app.style.transform = `scale(${scale})`;
+}
+
+window.addEventListener('resize', scaleApp);
 
 renderIntro();
 </script>
