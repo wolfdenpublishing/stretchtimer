@@ -1,0 +1,18 @@
+[
+  { "name": "Cat Pose",             "duration": 45, "image": "poses/cat_pose.png" },
+  { "name": "Cow Pose",             "duration": 45, "image": "poses/cow_pose.png" },
+  { "name": "Downward Dog",         "duration": 30, "image": "poses/downward_dog.png" },
+  { "name": "One Leg Downward Dog", "duration": 30, "image": "poses/one_legged_downward_dog_r.png", "side": "Right" },
+  { "name": "One Leg Downward Dog", "duration": 30, "image": "poses/one_legged_downward_dog_l.png", "side": "Left" },
+  { "name": "Upward Dog",           "duration": 30, "image": "poses/upward_dog.png" },
+  { "name": "Child Pose",           "duration": 45, "image": "poses/child_pose.png" },
+  { "name": "Camel Pose",           "duration": 45, "image": "poses/camel_pose.png" },
+  { "name": "Pigeon Pose",          "duration": 30, "image": "poses/pigeon_pose_r.png", "side": "Right" },
+  { "name": "Pigeon Pose",          "duration": 30, "image": "poses/pigeon_pose_l.png", "side": "Left" },
+  { "name": "Warrior I",            "duration": 30, "image": "poses/warrior_i_r.png", "side": "Right" },
+  { "name": "Warrior I",            "duration": 30, "image": "poses/warrior_i_l.png", "side": "Left" },
+  { "name": "Forward Bend",         "duration": 45, "image": "poses/forward_bend.png" },
+  { "name": "Triangle",             "duration": 30, "image": "poses/triangle_r.png", "side": "Right" },
+  { "name": "Triangle",             "duration": 30, "image": "poses/triangle_l.png", "side": "Left" },
+  { "name": "Caterpillar Pose",     "duration": 45, "image": "poses/caterpillar_pose.png" }
+]
