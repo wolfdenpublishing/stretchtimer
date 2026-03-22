@@ -676,8 +676,13 @@ function renderLanding() {
     setTimeout(() => {
       imgIndex = (imgIndex + 1) % uniqueImages.length;
       imgEl.src = uniqueImages[imgIndex];
-      imgEl.classList.remove('fade-out');
-      imgEl.classList.add('fade-in');
+      imgEl.decode().then(() => {
+        imgEl.classList.remove('fade-out');
+        imgEl.classList.add('fade-in');
+      }).catch(() => {
+        imgEl.classList.remove('fade-out');
+        imgEl.classList.add('fade-in');
+      });
     }, 200);
   }, 3000);
 }
@@ -1037,6 +1042,9 @@ function scaleApp() {
 
 window.addEventListener('resize', scaleApp);
 document.fonts.ready.then(scaleApp);
+
+// Preload all pose images so slideshow transitions are clean
+poses.forEach(p => { const img = new Image(); img.src = p.image; });
 
 renderLanding();
 </script>
