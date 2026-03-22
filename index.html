@@ -71,6 +71,13 @@
   }
   .progress-pip.done { background: var(--accent); }
   .progress-pip.active { background: var(--warning); }
+  .progress-pip.break-pip {
+    flex: 0 0 6px;
+    width: 6px;
+    background: #2a5a6a;
+  }
+  .progress-pip.break-pip.done { background: #5ab8a0; }
+  .progress-pip.break-pip.active { background: var(--warning); }
 
   .pose-card {
     background: var(--card);
@@ -343,15 +350,25 @@
   }
 
   .pose-hint {
-    font-size: 0.72rem;
+    font-size: 0.85rem;
     color: var(--text-dim);
-    text-align: center;
+    text-align: left;
     line-height: 1.4;
-    margin-bottom: 16px;
-    padding: 0 12px;
+    margin-top: 12px;
+    margin-bottom: 8px;
+    padding: 0 4px;
   }
   .pose-hint strong {
     color: var(--text);
+  }
+
+  .break-message {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    text-align: center;
+    line-height: 1.5;
+    margin-top: 12px;
+    padding: 0 12px;
   }
 
   .landing {
@@ -451,21 +468,35 @@
 const poses = [
   { "name": "Cat Pose",             "duration": 45, "image": "poses/cat_pose.png" },
   { "name": "Cow Pose",             "duration": 45, "image": "poses/cow_pose.png" },
+  { "name": "Child Pose",           "image": "poses/child_pose.png", "type": "break" },
   { "name": "Downward Dog",         "duration": 30, "image": "poses/downward_dog.png" },
+  { "name": "Child Pose",           "image": "poses/child_pose.png", "type": "break" },
   { "name": "One Leg Downward Dog", "duration": 30, "image": "poses/one_legged_downward_dog_r.png", "side": "Right" },
   { "name": "One Leg Downward Dog", "duration": 30, "image": "poses/one_legged_downward_dog_l.png", "side": "Left" },
+  { "name": "Child Pose",           "image": "poses/child_pose.png", "type": "break" },
   { "name": "Upward Dog",           "duration": 30, "image": "poses/upward_dog.png" },
-  { "name": "Child Pose",           "duration": 45, "image": "poses/child_pose.png" },
   { "name": "Camel Pose",           "duration": 45, "image": "poses/camel_pose.png" },
+  { "name": "Child Pose",           "image": "poses/child_pose.png", "type": "break" },
   { "name": "Pigeon Pose",          "duration": 30, "image": "poses/pigeon_pose_r.png", "side": "Right" },
   { "name": "Pigeon Pose",          "duration": 30, "image": "poses/pigeon_pose_l.png", "side": "Left" },
+  { "name": "Child Pose",           "image": "poses/child_pose.png", "type": "break" },
   { "name": "Warrior I",            "duration": 30, "image": "poses/warrior_i_r.png", "side": "Right" },
   { "name": "Warrior I",            "duration": 30, "image": "poses/warrior_i_l.png", "side": "Left" },
-  { "name": "Forward Bend",         "duration": 45, "image": "poses/forward_bend.png" },
+  { "name": "Forward Bend",         "image": "poses/forward_bend.png", "type": "break" },
   { "name": "Triangle",             "duration": 30, "image": "poses/triangle_r.png", "side": "Right" },
   { "name": "Triangle",             "duration": 30, "image": "poses/triangle_l.png", "side": "Left" },
-  { "name": "Caterpillar Pose",     "duration": 45, "image": "poses/caterpillar_pose.png" }
+  { "name": "Forward Bend",         "duration": 45, "image": "poses/forward_bend.png" },
+  { "name": "Caterpillar Pose",     "duration": 45, "image": "poses/caterpillar_pose.png" },
+  { "name": "Child Pose",           "duration": 45, "image": "poses/child_pose.png" }
 ];
+
+function isBreak(pose) {
+  return pose.type === 'break';
+}
+
+function getTimedPoses() {
+  return poses.filter(p => !isBreak(p));
+}
 
 const hints = [
   "<strong>Breathe Deeply.</strong> Focus on slow, steady breathing through each pose. Never hold your breath.",
@@ -502,7 +533,17 @@ function shuffleHints() {
     const j = Math.floor(Math.random() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
-  routineHints = shuffled.slice(0, poses.length);
+  const timedCount = poses.filter(p => !isBreak(p)).length;
+  const selected = shuffled.slice(0, timedCount);
+  routineHints = [];
+  let hintIndex = 0;
+  for (let i = 0; i < poses.length; i++) {
+    if (isBreak(poses[i])) {
+      routineHints.push(null);
+    } else {
+      routineHints.push(selected[hintIndex++]);
+    }
+  }
 }
 
 // Multiplier helpers
@@ -530,7 +571,7 @@ function getEffectiveDuration(pose) {
 }
 
 function getTotalTime() {
-  return poses.reduce((s, p) => s + getEffectiveDuration(p), 0);
+  return poses.reduce((s, p) => s + (isBreak(p) ? 0 : getEffectiveDuration(p)), 0);
 }
 
 function adjustMultiplier(poseIndex, delta) {
@@ -540,7 +581,7 @@ function adjustMultiplier(poseIndex, delta) {
   if (currentPose === -1) {
     renderIntro();
   } else {
-    renderPose();
+    renderCurrentStep();
   }
 }
 
@@ -599,15 +640,24 @@ let landingImageInterval = null;
 function renderLanding() {
   if (landingImageInterval) clearInterval(landingImageInterval);
 
+  const uniqueImages = [];
+  const seenImages = new Set();
+  for (const p of poses) {
+    if (!seenImages.has(p.image)) {
+      seenImages.add(p.image);
+      uniqueImages.push(p.image);
+    }
+  }
+
   app.innerHTML = `
     <div class="landing">
       <h1>Rise &amp; Stretch</h1>
       <div class="tagline">Yoga Stretches for Strength &amp; Flexibility</div>
       <div class="landing-image-container">
-        <img id="landing-img" class="fade-in" src="${poses[0].image}" alt="Yoga pose">
+        <img id="landing-img" class="fade-in" src="${uniqueImages[0]}" alt="Yoga pose">
       </div>
       <div class="landing-description">
-        <p><strong>${poses.length} established yoga poses</strong> specifically ordered and timed to stretch, strengthen, and warm the body.</p>
+        <p><strong>${getTimedPoses().length} established yoga poses</strong> specifically ordered and timed to stretch, strengthen, and warm the body.</p>
         <p>Ideally performed <strong>first thing daily on waking</strong> to prepare your body for the day ahead.</p>
         <p>Each pose is timed with audio cues so you can focus on your form. Adjustable multipliers let you <strong>scale any pose up or down</strong> to match your fitness level. Start easy and build over time.</p>
       </div>
@@ -624,8 +674,8 @@ function renderLanding() {
     imgEl.classList.remove('fade-in');
     imgEl.classList.add('fade-out');
     setTimeout(() => {
-      imgIndex = (imgIndex + 1) % poses.length;
-      imgEl.src = poses[imgIndex].image;
+      imgIndex = (imgIndex + 1) % uniqueImages.length;
+      imgEl.src = uniqueImages[imgIndex];
       imgEl.classList.remove('fade-out');
       imgEl.classList.add('fade-in');
     }, 200);
@@ -678,7 +728,9 @@ function showIntro() {
 
 function renderIntro() {
   const total = getTotalTime();
+  const timedPoses = getTimedPoses();
   let listHTML = poses.map((p, i) => {
+    if (isBreak(p)) return '';
     const mult = getMultiplier(p);
     const eff = getEffectiveDuration(p);
     return `
@@ -697,7 +749,7 @@ function renderIntro() {
     <div class="header"><h1>Rise &amp; Stretch</h1></div>
     <div class="intro">
       <h2>Daily Flexibility Routine</h2>
-      <p>${poses.length} poses &middot; ${formatTime(total)} total</p>
+      <p>${timedPoses.length} poses &middot; ${formatTime(total)} total</p>
       <div class="pose-list">${listHTML}</div>
       <div class="btn-row">
         <button class="btn btn-start" onclick="startRoutine()">Begin Routine</button>
@@ -707,12 +759,22 @@ function renderIntro() {
   scaleApp();
 }
 
+function renderCurrentStep() {
+  if (currentPose < 0 || currentPose >= poses.length) return;
+  if (isBreak(poses[currentPose])) {
+    renderBreak();
+  } else {
+    renderPose();
+  }
+}
+
 function renderPose() {
   const pose = poses[currentPose];
   const mult = getMultiplier(pose);
   const effDuration = getEffectiveDuration(pose);
-  const pipsHTML = poses.map((_, i) => {
+  const pipsHTML = poses.map((p, i) => {
     let cls = 'progress-pip';
+    if (isBreak(p)) cls += ' break-pip';
     if (i < currentPose) cls += ' done';
     else if (i === currentPose) cls += ' active';
     return `<div class="${cls}"></div>`;
@@ -735,14 +797,14 @@ function renderPose() {
   app.innerHTML = `
     <div class="header"><h1>Rise &amp; Stretch</h1></div>
     <div class="progress-track">${pipsHTML}</div>
-    <div class="pose-hint">${routineHints[currentPose] || ''}</div>
     <div class="pose-card">
-      <div class="pose-label">Pose ${currentPose + 1} of ${poses.length}</div>
+      <div class="pose-label">Pose ${poses.slice(0, currentPose + 1).filter(p => !isBreak(p)).length} of ${getTimedPoses().length}</div>
       <div class="pose-name">${pose.name}</div>
       <div class="pose-subtitle">${pose.side || ''}</div>
       <div class="pose-illustration">
         <img src="${pose.image}" alt="${pose.name}${pose.side ? ' - ' + pose.side : ''}">
       </div>
+      <div class="pose-hint">${routineHints[currentPose] || ''}</div>
       ${showMultControls ? `
       <div class="pose-multiplier">
         <button class="mult-btn ${mult <= 0.5 ? 'disabled' : ''}" onclick="adjustMultiplier(${currentPose}, -0.1)">&minus;</button>
@@ -782,11 +844,45 @@ function renderPose() {
   scaleApp();
 }
 
+function renderBreak() {
+  const pose = poses[currentPose];
+  const pipsHTML = poses.map((p, i) => {
+    let cls = 'progress-pip';
+    if (isBreak(p)) cls += ' break-pip';
+    if (i < currentPose) cls += ' done';
+    else if (i === currentPose) cls += ' active';
+    return `<div class="${cls}"></div>`;
+  }).join('');
+
+  app.innerHTML = `
+    <div class="header"><h1>Rise &amp; Stretch</h1></div>
+    <div class="progress-track">${pipsHTML}</div>
+    <div class="pose-card">
+      <div class="pose-label">Break</div>
+      <div class="pose-name">${pose.name}</div>
+      <div class="pose-subtitle">${pose.side || ''}</div>
+      <div class="pose-illustration">
+        <img src="${pose.image}" alt="${pose.name}">
+      </div>
+      <div class="break-message">Settle into this resting pose. Breathe deeply and continue when you feel ready.</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-start" onclick="nextPose()">Ready to Continue</button>
+    </div>
+    <div class="nav-bar">
+      <button class="nav-btn ${currentPose === 0 ? 'disabled' : ''}" onclick="prevPose()"><span class="nav-icon">&#9664;</span> Prev</button>
+      <button class="nav-btn" onclick="resetApp()"><span class="nav-icon">&#8962;</span> Home</button>
+      <button class="nav-btn" onclick="nextPose()">Skip <span class="nav-icon">&#9654;</span></button>
+    </div>
+  `;
+  scaleApp();
+}
+
 function renderComplete() {
   const total = getTotalTime();
   app.innerHTML = `
     <div class="header"><h1>Rise &amp; Stretch</h1></div>
-    <div class="progress-track">${poses.map(() => '<div class="progress-pip done"></div>').join('')}</div>
+    <div class="progress-track">${poses.map(p => `<div class="progress-pip${isBreak(p) ? ' break-pip' : ''} done"></div>`).join('')}</div>
     <div class="completed">
       <div class="total-time">${formatTime(total)}</div>
       <h2>All Done!</h2>
@@ -809,9 +905,9 @@ function startRoutine() {
   currentPose = 0;
   countingDown = false;
   paused = false;
-  timeRemaining = getEffectiveDuration(poses[0]);
+  timeRemaining = isBreak(poses[0]) ? 0 : getEffectiveDuration(poses[0]);
   running = false;
-  renderPose();
+  renderCurrentStep();
 }
 
 function startTimer() {
@@ -820,7 +916,7 @@ function startTimer() {
   paused = false;
   running = true;
   timeRemaining = 5;
-  renderPose();
+  renderCurrentStep();
   timerInterval = setInterval(countdownTick, 1000);
 }
 
@@ -828,13 +924,13 @@ function countdownTick() {
   timeRemaining--;
   if (timeRemaining > 0) {
     playTick();
-    renderPose();
+    renderCurrentStep();
   } else {
     clearInterval(timerInterval);
     playDing();
     countingDown = false;
     timeRemaining = getEffectiveDuration(poses[currentPose]);
-    renderPose();
+    renderCurrentStep();
     timerInterval = setInterval(poseTimerTick, 1000);
   }
 }
@@ -847,9 +943,9 @@ function poseTimerTick() {
     timerInterval = null;
     running = false;
     playDing();
-    renderPose();
+    renderCurrentStep();
   } else {
-    renderPose();
+    renderCurrentStep();
   }
 }
 
@@ -858,14 +954,14 @@ function pauseTimer() {
   timerInterval = null;
   running = false;
   paused = true;
-  renderPose();
+  renderCurrentStep();
 }
 
 function resumeTimer() {
   ensureAudio();
   running = true;
   paused = false;
-  renderPose();
+  renderCurrentStep();
   timerInterval = setInterval(countingDown ? countdownTick : poseTimerTick, 1000);
 }
 
@@ -878,6 +974,9 @@ function nextPose() {
   currentPose++;
   if (currentPose >= poses.length) {
     renderComplete();
+  } else if (isBreak(poses[currentPose])) {
+    timeRemaining = 0;
+    renderBreak();
   } else {
     timeRemaining = getEffectiveDuration(poses[currentPose]);
     renderPose();
@@ -892,8 +991,13 @@ function prevPose() {
   countingDown = false;
   paused = false;
   currentPose--;
-  timeRemaining = getEffectiveDuration(poses[currentPose]);
-  renderPose();
+  if (isBreak(poses[currentPose])) {
+    timeRemaining = 0;
+    renderBreak();
+  } else {
+    timeRemaining = getEffectiveDuration(poses[currentPose]);
+    renderPose();
+  }
 }
 
 function redoPose() {
@@ -902,8 +1006,13 @@ function redoPose() {
   running = false;
   countingDown = false;
   paused = false;
-  timeRemaining = getEffectiveDuration(poses[currentPose]);
-  renderPose();
+  if (isBreak(poses[currentPose])) {
+    timeRemaining = 0;
+    renderBreak();
+  } else {
+    timeRemaining = getEffectiveDuration(poses[currentPose]);
+    renderPose();
+  }
 }
 
 function resetApp() {
