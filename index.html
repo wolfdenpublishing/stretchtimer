@@ -1044,7 +1044,7 @@ window.addEventListener('resize', scaleApp);
 document.fonts.ready.then(scaleApp);
 
 // Preload all pose images so slideshow transitions are clean
-poses.forEach(p => { const img = new Image(); img.src = p.image; });
+const preloadedImages = poses.map(p => { const img = new Image(); img.src = p.image; return img; });
 
 renderLanding();
 </script>
